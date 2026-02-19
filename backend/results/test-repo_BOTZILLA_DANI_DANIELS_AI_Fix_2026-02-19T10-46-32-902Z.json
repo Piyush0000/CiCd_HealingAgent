@@ -1,0 +1,89 @@
+{
+  "branch": "BOTZILLA_DANI_DANIELS_AI_Fix",
+  "repoUrl": "D:/pwioi/test-repo",
+  "totalFailures": 5,
+  "totalFixes": 1,
+  "iterationsUsed": 5,
+  "finalStatus": "FAILED",
+  "timeTaken": 6,
+  "score": 110,
+  "scoreBreakdown": {
+    "base": 100,
+    "timeBonus": 10,
+    "commitPenalty": 0
+  },
+  "ciTimeline": [
+    {
+      "iteration": 1,
+      "status": "FAILED",
+      "timestamp": "2026-02-19T10:46:29.152Z"
+    },
+    {
+      "iteration": 2,
+      "status": "FAILED",
+      "timestamp": "2026-02-19T10:46:30.778Z"
+    },
+    {
+      "iteration": 3,
+      "status": "FAILED",
+      "timestamp": "2026-02-19T10:46:31.537Z"
+    },
+    {
+      "iteration": 4,
+      "status": "FAILED",
+      "timestamp": "2026-02-19T10:46:32.220Z"
+    },
+    {
+      "iteration": 5,
+      "status": "FAILED",
+      "timestamp": "2026-02-19T10:46:32.900Z"
+    }
+  ],
+  "fixes": [
+    {
+      "file": "C:\\Users\\ratho\\AppData\\Local\\Temp\\cicd-agent\\test-repo_1771497987316\\calculator.py",
+      "bugType": "SYNTAX",
+      "line": 4,
+      "message": "E   SyntaxError: expected ':'",
+      "commitMessage": "[AI-AGENT] Fix: SYNTAX in calculator.py line 4",
+      "status": "Fixed",
+      "action": "Added missing colon"
+    },
+    {
+      "file": "C:\\Users\\ratho\\AppData\\Local\\Temp\\cicd-agent\\test-repo_1771497987316\\calculator.py",
+      "bugType": "SYNTAX",
+      "line": 4,
+      "message": "E   SyntaxError: expected ':'",
+      "commitMessage": "[AI-AGENT] Attempted fix: SYNTAX in calculator.py line 4",
+      "status": "Failed",
+      "action": "No applicable syntax fix"
+    },
+    {
+      "file": "C:\\Users\\ratho\\AppData\\Local\\Temp\\cicd-agent\\test-repo_1771497987316\\calculator.py",
+      "bugType": "SYNTAX",
+      "line": 4,
+      "message": "E   SyntaxError: expected ':'",
+      "commitMessage": "[AI-AGENT] Attempted fix: SYNTAX in calculator.py line 4",
+      "status": "Failed",
+      "action": "No applicable syntax fix"
+    },
+    {
+      "file": "C:\\Users\\ratho\\AppData\\Local\\Temp\\cicd-agent\\test-repo_1771497987316\\calculator.py",
+      "bugType": "SYNTAX",
+      "line": 4,
+      "message": "E   SyntaxError: expected ':'",
+      "commitMessage": "[AI-AGENT] Attempted fix: SYNTAX in calculator.py line 4",
+      "status": "Failed",
+      "action": "No applicable syntax fix"
+    },
+    {
+      "file": "C:\\Users\\ratho\\AppData\\Local\\Temp\\cicd-agent\\test-repo_1771497987316\\calculator.py",
+      "bugType": "SYNTAX",
+      "line": 4,
+      "message": "E   SyntaxError: expected ':'",
+      "commitMessage": "[AI-AGENT] Attempted fix: SYNTAX in calculator.py line 4",
+      "status": "Failed",
+      "action": "No applicable syntax fix"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+# ─── Backend ───────────────────────────────────
+node_modules/
+.env
+*.log
+npm-debug.log*
+
+# ─── Frontend ──────────────────────────────────
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+
+# ─── Cloned Repos (temp) ───────────────────────
+/tmp/cicd-agent/
+
+# ─── Results ───────────────────────────────────
+results.json
+
+# ─── OS / IDE ──────────────────────────────────
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
