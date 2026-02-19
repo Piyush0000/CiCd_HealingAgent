@@ -183,8 +183,29 @@ async function runTests(repoPath, onProgress = () => {}) {
         failures = parsePythonTestOutput(output);
       }
 
-      // If parsing found no structured failures, create a generic one
-      if (failures.length === 0 && !passed) {
+      // If parsing failed or found nothing, try AI Fallback
+      if (failures.length === 0 || failures.some(f => f.file === 'unknown' || !f.line)) {
+        onProgress(`[AI-DEBUG] API Key Present: ${!!process.env.OPENROUTER_API_KEY ? 'YES' : 'NO'}`);
+        if (process.env.OPENROUTER_API_KEY) {
+           onProgress('[AI-PARSE] Regex failed (found generic errors). Asking OpenRouter AI to analyze logs...');
+           try {
+             const aiFailure = await parseWithAI(output, onProgress);
+             if (aiFailure) {
+               onProgress(`[AI-PARSE] Success! AI found error in: ${aiFailure.file} line ${aiFailure.line}`);
+               failures = [aiFailure]; // Override with AI's better finding
+             } else {
+               onProgress('[AI-PARSE] AI could not identify the file/line.');
+             }
+           } catch (err) {
+             onProgress(`[AI-PARSE] Exception: ${err.message}`);
+           }
+        } else {
+             onProgress('[AI-PARSE] Skipped (No API Key found)');
+        }
+      }
+
+      // Final Check: If still nothing, use generic error
+      if (failures.length === 0) {
         failures.push({
           file: 'unknown',
           line: 0,
@@ -207,6 +228,77 @@ async function runTests(repoPath, onProgress = () => {}) {
       output: e.message,
       runner
     };
+  }
+}
+
+// --- GenAI Parser ---
+async function parseWithAI(logOutput, onProgress) {
+  // Truncate log to avoid token limits (Gemini has huge context, 50k chars is safe)
+  const relevantLog = logOutput.slice(-50000); 
+
+  const prompt = `
+Analyze this test failure log and extract the file path and line number causing the error.
+Return ONLY valid JSON in this format:
+{"file": "path/to/file.js", "line": 42, "message": "error description"}
+
+If you cannot find a file, return null.
+Do not hallucinate.
+
+LOG:
+\`\`\`
+${relevantLog}
+\`\`\`
+  `;
+
+  try {
+    onProgress('[AI-PARSE] Sending log (50k chars) to OpenRouter (Gemini 2.0)...');
+    
+    // Check if fetch is available
+    if (typeof fetch === 'undefined') throw new Error('Global fetch not available');
+
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        "model": "google/gemini-2.0-flash-001",
+        "messages": [
+          {"role": "system", "content": "You are a log analysis tool. Output only valid JSON. No markdown."},
+          {"role": "user", "content": prompt}
+        ]
+      })
+    });
+
+    if (!response.ok) {
+        throw new Error(`API Error ${response.status}: ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    if (!data.choices || !data.choices[0]) throw new Error('Invalid AI response structure');
+
+    let content = data.choices[0].message.content;
+    // Clean up markdown code blocks if present
+    content = content.replace(/^```json\s*/, '').replace(/^```\s*/, '').replace(/\s*```$/, '');
+
+    const result = JSON.parse(content);
+
+    if (result && result.file && result.file !== 'unknown') {
+       return {
+         file: result.file,
+         line: parseInt(result.line) || 0,
+         message: result.message || 'AI detected error',
+         rawOutput: relevantLog
+       };
+    } else {
+       onProgress(`[AI-PARSE] AI returned valid JSON but no file: ${JSON.stringify(result)}`);
+    }
+    return null;
+
+  } catch (e) {
+    onProgress(`[AI-PARSE] Error: ${e.message}`);
+    return null;
   }
 }
 

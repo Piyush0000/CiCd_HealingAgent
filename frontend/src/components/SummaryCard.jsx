@@ -1,58 +1,49 @@
 import React from 'react'
 
-export default function SummaryCard({ result, formatTime }) {
-  const isPassed = result.finalStatus === 'PASSED'
-
-  const stats = [
-    {
-      icon: '🐛',
-      value: result.totalFailures,
-      label: 'Total Failures',
-      valueClass: result.totalFailures > 0 ? 'stat-value-red' : 'stat-value-green'
-    },
-    {
-      icon: '🔧',
-      value: result.totalFixes,
-      label: 'Fixes Applied',
-      valueClass: 'stat-value-green'
-    },
-    {
-      icon: '🔁',
-      value: `${result.iterationsUsed}/5`,
-      label: 'Iterations Used',
-      valueClass: 'stat-value-orange'
-    },
-    {
-      icon: '⏱️',
-      value: formatTime(result.timeTaken),
-      label: 'Time Taken',
-      valueClass: 'stat-value-cyan'
-    },
-    {
-      icon: '🏆',
-      value: result.score,
-      label: 'Score',
-      valueClass: 'stat-value-purple'
-    },
-    {
-      icon: isPassed ? '✅' : '❌',
-      value: result.finalStatus,
-      label: 'Final Status',
-      valueClass: isPassed ? 'stat-value-green' : 'stat-value-red'
-    }
-  ]
-
+function SummaryCard({ icon, label, value }) {
   return (
-    <div className="summary-grid">
-      {stats.map((stat, idx) => (
-        <div className="stat-card" key={idx}>
-          <span className="stat-icon">{stat.icon}</span>
-          <div className={`stat-value ${stat.valueClass}`} style={{ fontSize: typeof stat.value === 'string' && stat.value.length > 5 ? '1.2rem' : '2rem' }}>
-            {stat.value}
-          </div>
-          <div className="stat-label">{stat.label}</div>
-        </div>
-      ))}
+    <div className="card" style={{ 
+      display: 'flex', 
+      alignItems: 'center', 
+      justifyContent: 'center', 
+      flexDirection: 'column', 
+      gap: '8px', 
+      background: 'var(--bg-card)', 
+      border: '1px solid var(--border)',
+      padding: '1.5rem',
+      position: 'relative',
+      overflow: 'hidden'
+    }}>
+      {/* Icon */}
+      <div style={{ fontSize: '1.5rem', opacity: 0.8, filter: 'drop-shadow(0 0 5px rgba(255,255,255,0.2))' }}>
+        {icon}
+      </div>
+      
+      {/* Value */}
+      <div style={{ 
+        fontSize: '2rem', 
+        fontWeight: '800', 
+        fontFamily: 'var(--font-mono)', 
+        color: '#ffffff', /* Explicit White */
+        textShadow: '0 0 15px rgba(255,255,255,0.1)',
+        lineHeight: '1.1'
+      }}>
+        {value}
+      </div>
+      
+      {/* Label */}
+      <div style={{ 
+        textTransform: 'uppercase', 
+        fontSize: '0.7rem', 
+        letterSpacing: '0.15em', 
+        color: 'var(--primary)', /* Neon Orange */
+        fontWeight: '700',
+        marginTop: '0.25rem'
+      }}>
+        {label}
+      </div>
     </div>
   )
 }
+
+export default SummaryCard

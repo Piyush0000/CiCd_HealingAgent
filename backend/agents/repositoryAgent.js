@@ -4,8 +4,9 @@ const path = require('path');
 const os = require('os');
 
 function getRepoDir(repoUrl) {
-  const repoName = repoUrl.split('/').pop().replace('.git', '') + '_' + Date.now();
-  return path.join(os.tmpdir(), 'cicd-agent', repoName);
+  // Sanitize name: replace :, \, / with underscore
+  const safeName = repoUrl.replace(/[:\\/]/g, '_').replace('.git', '') + '_' + Date.now();
+  return path.join(os.tmpdir(), 'cicd-agent', safeName);
 }
 
 async function cloneRepo(repoUrl) {

@@ -99,21 +99,25 @@ async function runOrchestrator({ repoUrl, teamName, leaderName }, emitEvent) {
   if (timeTaken < 300) score += 10;
   if (commitCount > 20) score -= 2 * (commitCount - 20);
 
+  // Final Result Construction
   const result = {
-    branch: branchName,
+    runId: `RUN-${Date.now().toString().slice(-6)}`, // Generate a short unique ID
+    branchName, // Explicitly named for frontend
     repoUrl,
-    totalFailures,
+    finalStatus: finalStatus,
+    totalFailures: totalFailures,
     totalFixes: allFixes.filter(f => f.status === 'Fixed').length,
-    iterationsUsed,
-    finalStatus,
-    timeTaken,
-    score,
+    iterations: iterationsUsed, // The actual number of iterations used
+    maxIterations: RETRY_LIMIT, // The limit
+    timeTaken: `${timeTaken}s`,
+    score: score,
     scoreBreakdown: {
       base: 100,
       timeBonus: timeTaken < 300 ? 10 : 0,
       commitPenalty: commitCount > 20 ? -2 * (commitCount - 20) : 0
     },
-    ciTimeline: ciMonitor.getTimeline(),
+    // Map timeline for frontend
+    history: ciMonitor.getTimeline() || [], 
     fixes: allFixes
   };
 

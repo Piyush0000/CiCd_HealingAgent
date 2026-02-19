@@ -241,11 +241,25 @@ async function applyFixes(repoPath, analyzedFailures) {
     const strategy = fixStrategies[failure.bugType];
     let fixResult = { status: 'Failed', reason: 'No strategy available' };
 
+    // 1. Try Deterministic Regex Fix first (Fast & Cheap)
     if (strategy) {
       try {
         fixResult = strategy(repoPath, failure);
       } catch (e) {
         fixResult = { status: 'Failed', reason: e.message };
+      }
+    }
+
+    // 2. If Deterministic Fix Failed, Try AI (Smart & Powerful)
+    if (fixResult.status !== 'Fixed' && process.env.OPENROUTER_API_KEY) {
+      console.log(`[AI-FIX] Message: Attempting GenAI fix for ${failure.bugType} in ${failure.file}`);
+      try {
+        const aiResult = await fixWithAI(repoPath, failure);
+        if (aiResult.status === 'Fixed') {
+           fixResult = aiResult;
+        }
+      } catch (e) {
+        console.error('[AI-FIX] Error:', e.message);
       }
     }
 
@@ -263,6 +277,65 @@ async function applyFixes(repoPath, analyzedFailures) {
   }
 
   return results;
+}
+
+// --- GenAI Integration ---
+async function fixWithAI(repoPath, failure) {
+  const filePath = resolveFilePath(repoPath, failure.file);
+  if (!filePath) return { status: 'Failed', reason: 'File not found for AI' };
+
+  const code = fs.readFileSync(filePath, 'utf8');
+  const errorContext = `Error Type: ${failure.bugType}\nMessage: ${failure.message}\nLine: ${failure.line}`;
+
+  const prompt = `
+You are an expert Autonomous AI coding assistant.
+Fix the following code error.
+
+FILE CONTENT:
+\`\`\`
+${code}
+\`\`\`
+
+ERROR:
+${errorContext}
+
+INSTRUCTIONS:
+1. Return ONLY the fixed code block.
+2. Do not add markdown backticks or explanations.
+3. Fix strictly the error mentioned.
+4. Preserve indentation and style.
+  `;
+
+  try {
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        "model": "google/gemini-2.0-flash-001",
+        "messages": [
+          {"role": "system", "content": "You are a code fixing engine. Output only the fixed code. No markdown."},
+          {"role": "user", "content": prompt}
+        ]
+      })
+    });
+    
+    if (!response.ok) throw new Error(`API Error ${response.status}`);
+
+    const data = await response.json();
+    let fixedCode = data.choices[0].message.content;
+
+    // Clean up markdown code blocks if present
+    fixedCode = fixedCode.replace(/^```\w*\s*/, '').replace(/\s*```$/, '');
+
+    fs.writeFileSync(filePath, fixedCode);
+    return { status: 'Fixed', action: 'Applied Generative AI Fix (Gemini 2.0)' };
+
+  } catch (error) {
+    return { status: 'Failed', reason: `AI Error: ${error.message}` };
+  }
 }
 
 module.exports = { applyFixes };

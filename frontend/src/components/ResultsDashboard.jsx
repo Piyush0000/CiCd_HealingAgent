@@ -1,104 +1,113 @@
 import React from 'react'
-import SummaryCard from './SummaryCard'
 import ScorePanel from './ScorePanel'
+import CITimeline from './CITimeline' // Need to ensure this also has white text
 import FixesTable from './FixesTable'
-import CITimeline from './CITimeline'
-import EventLog from './EventLog'
+import SummaryCard from './SummaryCard'
 
-export default function ResultsDashboard({ result, onReset, events }) {
-  const isPassed = result.finalStatus === 'PASSED'
+function ResultsDashboard({ result, onReset, events }) {
+  if (!result) return null
 
-  const formatTime = (seconds) => {
-    if (seconds < 60) return `${seconds}s`
-    const m = Math.floor(seconds / 60)
-    const s = seconds % 60
-    return `${m}m ${s}s`
-  }
+  const isSuccess = result.finalStatus === 'PASSED'
 
   return (
-    <div className="results-section">
-      {/* Top bar */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
-        <h2 className="section-title" style={{ margin: 0 }}>
-          <span>📊</span> Agent <span>Results</span>
-        </h2>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-          <div className={`status-badge ${isPassed ? 'status-passed' : 'status-failed'}`}>
-            <span>{isPassed ? '✅' : '❌'}</span>
-            {result.finalStatus}
-          </div>
-          <button
-            id="reset-btn"
-            className="btn btn-primary"
-            onClick={onReset}
-            style={{ padding: '10px 20px', fontSize: '0.875rem' }}
-          >
-            <span>↩</span> New Run
-          </button>
+    <div className="animate-enter" style={{ color: 'var(--text-main)' }}>
+      {/* Header Area */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', borderBottom: '1px solid var(--border)', paddingBottom: '1.5rem' }}>
+        <div>
+          <h2 style={{ 
+            fontSize: '1.5rem', 
+            fontWeight: '800', 
+            textTransform: 'uppercase', 
+            letterSpacing: '0.1em', 
+            color: '#fff', /* Explicit White */
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '1rem',
+            textShadow: '0 0 20px rgba(255,255,255,0.1)'
+          }}>
+            Mission Report
+            <span style={{ 
+              fontSize: '0.8rem', 
+              background: isSuccess ? 'rgba(0, 255, 148, 0.1)' : 'rgba(255, 0, 60, 0.1)',
+              color: isSuccess ? 'var(--success)' : 'var(--danger)',
+              border: `1px solid ${isSuccess ? 'var(--success)' : 'var(--danger)'}`,
+              padding: '4px 12px',
+              borderRadius: '2px',
+              boxShadow: `0 0 10px ${isSuccess ? 'var(--success-glow)' : 'var(--danger-glow)'}`
+            }}>
+              {result.finalStatus}
+            </span>
+          </h2>
+          <p style={{ color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)', fontSize: '0.75rem', marginTop: '0.5rem' }}>
+            ID: <span style={{ color: 'var(--primary)' }}>{result.runId || 'UNK-001'}</span> // {(new Date()).toLocaleDateString()} // LEVEL 5 AUTHORIZATION
+          </p>
+        </div>
+        
+        {/* Reset Button (Top Right) */}
+        <div>
+           {/* Handled by parent but visible here if needed */}
         </div>
       </div>
 
-      {/* Summary Cards Row */}
-      <SummaryCard result={result} formatTime={formatTime} />
-
-      {/* Score + CI Timeline row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1.5fr)', gap: '1.5rem' }}>
-        <ScorePanel result={result} />
-        <CITimeline timeline={result.ciTimeline} iterationsUsed={result.iterationsUsed} />
+      {/* Primary Grid (Summary Cards) */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.5rem', marginBottom: '2rem' }}>
+        <SummaryCard icon="⚠️" label="Failures" value={result.totalFailures} />
+        <SummaryCard icon="🔧" label="Fixes" value={result.totalFixes} />
+        <SummaryCard icon="🔄" label="Iterations" value={`${result.iterations || 0}/${result.maxIterations || 5}`} />
+        <SummaryCard icon="⏱️" label="Time Taken" value={result.timeTaken || '0s'} />
       </div>
 
-      {/* Repo + Branch info */}
-      <div className="card">
-        <div className="card-header" style={{ marginBottom: '1rem' }}>
-          <div className="card-title">
-            <div className="card-icon card-icon-cyan">🔗</div>
-            Run Details
-          </div>
+      {/* Secondary Detailed Grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(300px, 1fr) 2fr', gap: '2rem' }}>
+        
+        {/* Left Column: Score & Timeline */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+          <section className="card">
+            <h3>Performance Matrix</h3>
+            <ScorePanel score={result.score} breakdown={result.scoreBreakdown} />
+          </section>
+
+          <section className="card">
+            <h3>Execution Timeline</h3>
+            <CITimeline 
+              iterations={result.iterations} 
+              maxIterations={result.maxIterations} 
+              timeline={result.history} 
+            />
+          </section>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <span style={{ fontSize: '0.7rem', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Repository</span>
-            <div className="repo-info">
-              <span>🐙</span>
-              <span>{result.repoUrl}</span>
+
+        {/* Right Column: Details & Logs */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+          {/* Target Intel Panel */}
+          <section className="card">
+            <h3>Target Intel</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', fontFamily: 'var(--font-mono)', fontSize: '0.85rem' }}>
+               <div>
+                 <label style={{ display: 'block', fontSize: '0.7rem', color: '#666', marginBottom: '4px', textTransform: 'uppercase' }}>Repository</label>
+                 <div style={{ color: 'var(--primary)', wordBreak: 'break-all', fontWeight: '700' }}>
+                   {result.repoUrl || 'N/A'}
+                 </div>
+               </div>
+               <div>
+                 <label style={{ display: 'block', fontSize: '0.7rem', color: '#666', marginBottom: '4px', textTransform: 'uppercase' }}>Branch</label>
+                 <div style={{ color: 'var(--success)', fontWeight: '700' }}>
+                   {result.branchName || 'N/A'}
+                 </div>
+               </div>
             </div>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <span style={{ fontSize: '0.7rem', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Branch Created</span>
-            <div className="branch-badge" style={{ display: 'inline-flex', fontSize: '0.82rem', padding: '8px 14px' }}>
-              <span>🌿</span>
-              <span>{result.branch}</span>
-            </div>
-          </div>
-        </div>
-      </div>
+          </section>
 
-      {/* Fixes Table */}
-      <div className="card">
-        <div className="card-header">
-          <div className="card-title">
-            <div className="card-icon card-icon-green">🔧</div>
-            Fixes Applied
-          </div>
-          <span style={{ fontSize: '0.75rem', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>
-            {result.fixes?.filter(f => f.status === 'Fixed').length} / {result.fixes?.length} successful
-          </span>
+          {/* Fix Operations Log */}
+          <section className="card" style={{ flex: 1, minHeight: '300px' }}>
+            <h3>Fix Operations Log</h3>
+            <FixesTable fixes={result.fixes} />
+          </section>
         </div>
-        <FixesTable fixes={result.fixes || []} />
-      </div>
 
-      {/* Event Log replay */}
-      {events && events.length > 0 && (
-        <div className="card">
-          <div className="card-header">
-            <div className="card-title">
-              <div className="card-icon card-icon-orange">📜</div>
-              Agent Event Log
-            </div>
-          </div>
-          <EventLog events={events} isRunning={false} currentIteration={null} />
-        </div>
-      )}
+      </div>
     </div>
   )
 }
+
+export default ResultsDashboard

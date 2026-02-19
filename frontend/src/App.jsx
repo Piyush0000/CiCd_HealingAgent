@@ -7,7 +7,8 @@ import EventLog from './components/EventLog'
 import ResultsDashboard from './components/ResultsDashboard'
 import Toast from './components/Toast'
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000'
+// Use VITE_API_URL or fallback to local
+const API_BASE = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace(/\/$/, '') : 'http://localhost:4000'
 
 function App() {
   const [formData, setFormData] = useState({ repoUrl: '', teamName: '', leaderName: '' })
@@ -33,20 +34,27 @@ function App() {
   }, [])
 
   const connectSocket = useCallback((rid) => {
-    if (socketRef.current) {
-      socketRef.current.disconnect()
-    }
-    const socket = io(API_BASE, { transports: ['websocket', 'polling'] })
+    if (socketRef.current) socketRef.current.disconnect()
+
+    // Connect to specific run ID room
+    const socket = io(API_BASE, { 
+      transports: ['websocket', 'polling'],
+      withCredentials: true
+    })
     socketRef.current = socket
 
     socket.on('connect', () => {
+      console.log('Socket connected:', socket.id)
       socket.emit('join-run', rid)
       addEvent({ type: 'STEP', message: 'Connected to agent — live events streaming...', ts: new Date().toISOString() })
     })
 
-    socket.on('agent-event', (event) => {
-      addEvent(event)
+    socket.on('connect_error', (err) => {
+      console.error('Socket error:', err)
+      showToast('Socket connection failed: ' + err.message, 'error')
     })
+
+    socket.on('agent-event', (event) => addEvent(event))
 
     socket.on('agent-complete', ({ result }) => {
       setResult(result)
@@ -64,13 +72,10 @@ function App() {
       socket.disconnect()
     })
 
-    socket.on('disconnect', () => {
-      console.log('Socket disconnected')
-    })
   }, [addEvent, showToast])
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
+    e.preventDefault() // Safety check
     if (!formData.repoUrl || !formData.teamName || !formData.leaderName) {
       showToast('Please fill in all fields', 'error')
       return
@@ -85,28 +90,23 @@ function App() {
     addEvent({ type: 'START', message: 'Initializing CI/CD Healing Agent...', ts: new Date().toISOString() })
 
     try {
-      // Try socket-based mode first
+      // 1. Start the run via POST
       const response = await axios.post(`${API_BASE}/run-agent`, formData)
       const { runId: rid } = response.data
       setRunId(rid)
+      
+      // 2. Connect socket to listen for events
       connectSocket(rid)
     } catch (err) {
-      // Fallback to sync mode if socket setup fails
-      addEvent({ type: 'STEP', message: 'Using synchronous mode...', ts: new Date().toISOString() })
-      try {
-        const syncResp = await axios.post(`${API_BASE}/run-agent-sync`, formData, { timeout: 300000 })
-        const { result: syncResult, events: syncEvents } = syncResp.data
-        syncEvents?.forEach(addEvent)
-        setResult(syncResult)
-        setIsRunning(false)
-        showToast('Agent completed!', syncResult.finalStatus === 'PASSED' ? 'success' : 'info')
-      } catch (syncErr) {
-        const errMsg = syncErr.response?.data?.error || syncErr.message
-        setError(errMsg)
-        setIsRunning(false)
-        addEvent({ type: 'ERROR', message: errMsg, ts: new Date().toISOString() })
-        showToast('Error: ' + errMsg, 'error')
-      }
+      // If socket mode fails, fallback? Or just show error.
+      // For now, let's treat it as a hard error or try fallback if you prefer.
+      // But typically we want the socket stream.
+      console.error(err);
+      const errMsg = err.response?.data?.error || err.message
+      setError(errMsg)
+      setIsRunning(false)
+      showToast('Error starting agent: ' + errMsg, 'error')
+      addEvent({ type: 'ERROR', message: errMsg, ts: new Date().toISOString() })
     }
   }
 
@@ -126,57 +126,55 @@ function App() {
   }, [])
 
   return (
-    <div className="app-container">
-      {/* Animated background */}
-      <div className="bg-animated">
-        <div className="bg-orb bg-orb-1" />
-        <div className="bg-orb bg-orb-2" />
-        <div className="bg-orb bg-orb-3" />
-      </div>
-      <div className="bg-grid" />
-
+    <div className="app-root">
       <Header />
-
-      <main className="main-content">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
-          {/* Input + Event Log section */}
-          <div style={{ display: 'grid', gridTemplateColumns: result ? '1fr' : 'minmax(0,1fr) minmax(0,1fr)', gap: '1.5rem' }}>
-            {!result && (
-              <InputSection
-                formData={formData}
-                setFormData={setFormData}
-                onSubmit={handleSubmit}
-                isRunning={isRunning}
-                currentIteration={currentIteration}
-              />
-            )}
-            {(isRunning || events.length > 0) && !result && (
-              <EventLog events={events} isRunning={isRunning} currentIteration={currentIteration} />
-            )}
+      
+      <main className="container">
+        {/* If we have a result, show the dashboard full width */}
+        {result ? (
+          <div className="animate-enter">
+             <button className="btn btn-primary" onClick={handleReset} style={{ marginBottom: '1rem' }}>
+                &larr; Start New Run
+             </button>
+             <ResultsDashboard result={result} events={events} />
           </div>
-
-          {/* Results Dashboard */}
-          {result && (
-            <ResultsDashboard
-              result={result}
-              onReset={handleReset}
-              events={events}
-            />
-          )}
-
-          {/* Error state */}
-          {error && !result && (
-            <div className="card" style={{ borderColor: 'rgba(239,68,68,0.3)' }}>
-              <div className="card-title" style={{ color: 'var(--accent-red)', marginBottom: '0.75rem' }}>
-                <span>⚠️</span> Agent Error
-              </div>
-              <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{error}</p>
-              <button className="btn btn-primary" style={{ marginTop: '1.5rem' }} onClick={handleReset}>
-                Try Again
-              </button>
+        ) : (
+          <div className="dashboard-grid">
+            {/* Left Column: Input */}
+            <div className="left-col">
+              <section className="card">
+                <InputSection 
+                  formData={formData}
+                  setFormData={setFormData}
+                  onSubmit={handleSubmit}
+                  isRunning={isRunning}
+                  currentIteration={currentIteration}
+                />
+              </section>
             </div>
-          )}
-        </div>
+
+            {/* Right Column: Logs */}
+            <div className="right-col">
+              <section className="card" style={{ height: '100%' }}>
+                <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  Live Agent Feed
+                  {isRunning && <span className="status-badge"><span className="status-dot"></span> Live</span>}
+                </h3>
+                <EventLog events={events} />
+              </section>
+            </div>
+          </div>
+        )}
+
+        {/* Error State */}
+        {error && !result && (
+           <div className="card" style={{ marginTop: '2rem', borderColor: 'var(--danger)', background: 'var(--danger-bg)' }}>
+              <h3 style={{ color: 'var(--danger)' }}>Agent Error</h3>
+              <p>{error}</p>
+              <button className="btn btn-primary" style={{ marginTop: '1rem', background: 'var(--danger)', borderColor: 'transparent' }} onClick={handleReset}>Close</button>
+           </div>
+        )}
+
       </main>
 
       {toast && <Toast message={toast.message} type={toast.type} />}

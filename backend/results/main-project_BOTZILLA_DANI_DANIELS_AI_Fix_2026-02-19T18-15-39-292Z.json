@@ -1,0 +1,91 @@
+{
+  "runId": "RUN-939291",
+  "branchName": "BOTZILLA_DANI_DANIELS_AI_Fix",
+  "repoUrl": "https://github.com/anshgupta885/main-project",
+  "finalStatus": "FAILED",
+  "totalFailures": 5,
+  "totalFixes": 0,
+  "iterations": 5,
+  "maxIterations": 5,
+  "timeTaken": "14s",
+  "score": 110,
+  "scoreBreakdown": {
+    "base": 100,
+    "timeBonus": 10,
+    "commitPenalty": 0
+  },
+  "history": [
+    {
+      "iteration": 1,
+      "status": "FAILED",
+      "timestamp": "2026-02-19T18:15:32.806Z"
+    },
+    {
+      "iteration": 2,
+      "status": "FAILED",
+      "timestamp": "2026-02-19T18:15:35.043Z"
+    },
+    {
+      "iteration": 3,
+      "status": "FAILED",
+      "timestamp": "2026-02-19T18:15:36.558Z"
+    },
+    {
+      "iteration": 4,
+      "status": "FAILED",
+      "timestamp": "2026-02-19T18:15:37.923Z"
+    },
+    {
+      "iteration": 5,
+      "status": "FAILED",
+      "timestamp": "2026-02-19T18:15:39.290Z"
+    }
+  ],
+  "fixes": [
+    {
+      "file": "unknown",
+      "bugType": "LOGIC",
+      "line": 0,
+      "message": "> echo \"Error: no test specified\" && exit 1 --watchAll=false --passWithNoTests",
+      "commitMessage": "[AI-AGENT] Attempted fix: LOGIC in unknown line N/A",
+      "status": "Failed",
+      "action": "File not found"
+    },
+    {
+      "file": "unknown",
+      "bugType": "LOGIC",
+      "line": 0,
+      "message": "> echo \"Error: no test specified\" && exit 1 --watchAll=false --passWithNoTests",
+      "commitMessage": "[AI-AGENT] Attempted fix: LOGIC in unknown line N/A",
+      "status": "Failed",
+      "action": "File not found"
+    },
+    {
+      "file": "unknown",
+      "bugType": "LOGIC",
+      "line": 0,
+      "message": "> echo \"Error: no test specified\" && exit 1 --watchAll=false --passWithNoTests",
+      "commitMessage": "[AI-AGENT] Attempted fix: LOGIC in unknown line N/A",
+      "status": "Failed",
+      "action": "File not found"
+    },
+    {
+      "file": "unknown",
+      "bugType": "LOGIC",
+      "line": 0,
+      "message": "> echo \"Error: no test specified\" && exit 1 --watchAll=false --passWithNoTests",
+      "commitMessage": "[AI-AGENT] Attempted fix: LOGIC in unknown line N/A",
+      "status": "Failed",
+      "action": "File not found"
+    },
+    {
+      "file": "unknown",
+      "bugType": "LOGIC",
+      "line": 0,
+      "message": "> echo \"Error: no test specified\" && exit 1 --watchAll=false --passWithNoTests",
+      "commitMessage": "[AI-AGENT] Attempted fix: LOGIC in unknown line N/A",
+      "status": "Failed",
+      "action": "File not found"
+    }
+  ]
+}

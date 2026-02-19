@@ -1,85 +1,53 @@
 import React from 'react'
 
-const BUG_ICONS = {
-  LINTING: '🔶',
-  SYNTAX: '🔴',
-  LOGIC: '🟣',
-  TYPE_ERROR: '🟠',
-  IMPORT: '🔵',
-  INDENTATION: '🟢'
-}
-
-function truncate(str, max) {
-  if (!str) return '—'
-  return str.length > max ? str.slice(0, max) + '...' : str
-}
-
-function formatCommitMsg(msg) {
-  if (!msg) return '—'
-  const parts = msg.split('] ')
-  if (parts.length > 1) {
-    return (
-      <>
-        <span className="ai-prefix">[AI-AGENT]</span>
-        {' ' + parts.slice(1).join('] ')}
-      </>
-    )
-  }
-  return msg
-}
-
-export default function FixesTable({ fixes }) {
+function FixesTable({ fixes = [] }) {
   if (!fixes || fixes.length === 0) {
     return (
-      <div className="empty-state" style={{ padding: '2rem' }}>
-        <div className="empty-icon">🎉</div>
-        <div className="empty-title">No Fixes Applied</div>
-        <div className="empty-desc">All tests passed on the first run!</div>
+      <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontStyle: 'italic', border: '1px dashed var(--border)', borderRadius: 'var(--radius)' }}>
+        No fixes were required. All clear.
       </div>
     )
   }
 
+  const getBadgeClass = (type) => {
+     if (type === 'SYNTAX') return 'badge-syntax'
+     if (type === 'LINTING') return 'badge-lint'
+     return 'badge-import'
+  }
+
   return (
-    <div className="table-wrapper">
-      <table className="fixes-table">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>File</th>
-            <th>Bug Type</th>
-            <th style={{ textAlign: 'center' }}>Line</th>
-            <th>Commit Message</th>
-            <th style={{ textAlign: 'center' }}>Status</th>
+    <div style={{ overflowX: 'auto' }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'var(--font-mono)', fontSize: '0.8rem' }}>
+        <thead style={{ borderBottom: '2px solid var(--border)' }}>
+          <tr style={{ color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            <th style={{ textAlign: 'left', padding: '10px' }}>Type</th>
+            <th style={{ textAlign: 'left', padding: '10px' }}>Location</th>
+            <th style={{ textAlign: 'left', padding: '10px' }}>Action</th>
+            <th style={{ textAlign: 'right', padding: '10px' }}>Status</th>
           </tr>
         </thead>
         <tbody>
           {fixes.map((fix, idx) => (
-            <tr key={idx}>
-              <td style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontSize: '0.78rem', width: '40px' }}>
-                {String(idx + 1).padStart(2, '0')}
-              </td>
-              <td className="file-cell" title={fix.file}>
-                📄 {truncate(fix.file?.split(/[\\/]/).pop() || fix.file, 28)}
-              </td>
-              <td>
-                <span className={`bug-badge bug-${fix.bugType}`}>
-                  {BUG_ICONS[fix.bugType] || '⚪'} {fix.bugType}
+            <tr key={idx} style={{ borderBottom: '1px solid #111' }}>
+              <td style={{ padding: '10px' }}>
+                <span className={`badge ${getBadgeClass(fix.bugType || fix.type)}`}>
+                  {fix.bugType || fix.type || 'UNKNOWN'}
                 </span>
               </td>
-              <td className="line-cell">{fix.line || '—'}</td>
-              <td className="commit-cell" title={fix.commitMessage}>
-                {formatCommitMsg(fix.commitMessage)}
-              </td>
-              <td style={{ textAlign: 'center' }}>
-                {fix.status === 'Fixed' ? (
-                  <span className="status-cell-fixed">
-                    ✅ Fixed
+              <td style={{ padding: '10px', color: 'var(--text-muted)' }}>
+                {fix.file === 'unknown' ? (
+                  <span style={{ color: 'var(--warning)', fontSize: '0.75rem', border: '1px solid var(--warning-bg)', padding: '2px 6px', borderRadius: '4px' }}>
+                    ⚠️ Parsing Failed
                   </span>
                 ) : (
-                  <span className="status-cell-failed">
-                    ❌ Failed
-                  </span>
+                  `${fix.file}:${fix.line}`
                 )}
+              </td>
+              <td style={{ padding: '10px', color: 'var(--text-main)' }}>
+                {fix.action || fix.description || 'No details'}
+              </td>
+              <td style={{ padding: '10px', textAlign: 'right', fontWeight: 'bold' }}>
+                {fix.status === 'Fixed' ? <span style={{ color: 'var(--success)' }}>✅</span> : <span style={{ color: 'var(--danger)' }}>❌</span>}
               </td>
             </tr>
           ))}
@@ -88,3 +56,5 @@ export default function FixesTable({ fixes }) {
     </div>
   )
 }
+
+export default FixesTable
