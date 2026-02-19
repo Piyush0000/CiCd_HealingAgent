@@ -300,8 +300,9 @@ ERROR:
 ${errorContext}
 
 INSTRUCTIONS:
-1. Return ONLY the fixed code block.
-2. Do not add markdown backticks or explanations.
+1. Return ONLY valid JSON in this format:
+{"code": "FULL_FIXED_CODE_HERE", "description": "Brief explanation of the fix (e.g. Removed unused import)"}
+2. Do not add markdown backticks outside the JSON.
 3. Fix strictly the error mentioned.
 4. Preserve indentation and style.
   `;
@@ -316,7 +317,7 @@ INSTRUCTIONS:
       body: JSON.stringify({
         "model": "google/gemini-2.0-flash-001",
         "messages": [
-          {"role": "system", "content": "You are a code fixing engine. Output only the fixed code. No markdown."},
+          {"role": "system", "content": "You are a code fixing engine. Output only valid JSON. No markdown."},
           {"role": "user", "content": prompt}
         ]
       })
@@ -325,13 +326,17 @@ INSTRUCTIONS:
     if (!response.ok) throw new Error(`API Error ${response.status}`);
 
     const data = await response.json();
-    let fixedCode = data.choices[0].message.content;
+    let content = data.choices[0].message.content;
 
     // Clean up markdown code blocks if present
-    fixedCode = fixedCode.replace(/^```\w*\s*/, '').replace(/\s*```$/, '');
+    content = content.replace(/^```json\s*/, '').replace(/^```\s*/, '').replace(/\s*```$/, '');
+
+    const result = JSON.parse(content);
+    const fixedCode = result.code;
+    const description = result.description || 'Applied AI Fix';
 
     fs.writeFileSync(filePath, fixedCode);
-    return { status: 'Fixed', action: 'Applied Generative AI Fix (Gemini 2.0)' };
+    return { status: 'Fixed', action: description };
 
   } catch (error) {
     return { status: 'Failed', reason: `AI Error: ${error.message}` };
