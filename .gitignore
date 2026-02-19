@@ -8,6 +8,7 @@ npm-debug.log*
 frontend/node_modules/
 frontend/dist/
 frontend/.env
+frontend/.env.production
 
 # ─── Cloned Repos (temp) ───────────────────────
 /tmp/cicd-agent/

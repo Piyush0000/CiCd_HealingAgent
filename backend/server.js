@@ -13,16 +13,32 @@ if (!fs.existsSync(RESULTS_DIR)) fs.mkdirSync(RESULTS_DIR, { recursive: true });
 
 const app = express();
 const server = http.createServer(app);
+
+// Parse allowed origins
+const allowedOrigins = (process.env.FRONTEND_URL || '*').split(',').map(url => url.trim());
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    // Check if origin is allowed
+    if (allowedOrigins.includes('*') || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.log('Blocked by CORS:', origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  methods: ['GET', 'POST'],
+  credentials: true
+};
+
 const io = new Server(server, {
-  cors: {
-    origin: process.env.FRONTEND_URL || '*',
-    methods: ['GET', 'POST']
-  }
+  cors: corsOptions
 });
 
-app.use(cors({
-  origin: process.env.FRONTEND_URL || '*'
-}));
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Health check
