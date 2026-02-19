@@ -3,26 +3,32 @@ const fs = require('fs');
 const path = require('path');
 
 function detectTestRunner(repoPath) {
-  const pkgPath = path.join(repoPath, 'package.json');
-  const requirementsTxt = path.join(repoPath, 'requirements.txt');
-  const setupPy = path.join(repoPath, 'setup.py');
-  const pyprojectToml = path.join(repoPath, 'pyproject.toml');
+  const possibleRoots = ['.', 'backend', 'server', 'frontend', 'client', 'api', 'app'];
 
-  if (fs.existsSync(pkgPath)) {
-    const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
-    const scripts = pkg.scripts || {};
-    if (scripts.test) return { runner: 'npm', command: 'npm test -- --watchAll=false --passWithNoTests 2>&1', type: 'node' };
-    const deps = { ...pkg.dependencies, ...pkg.devDependencies };
-    if (deps['jest']) return { runner: 'jest', command: 'npx jest --watchAll=false 2>&1', type: 'node' };
-    if (deps['mocha']) return { runner: 'mocha', command: 'npx mocha 2>&1', type: 'node' };
-    if (deps['vitest']) return { runner: 'vitest', command: 'npx vitest run 2>&1', type: 'node' };
+  for (const subDir of possibleRoots) {
+    const searchPath = path.join(repoPath, subDir);
+    const pkgPath = path.join(searchPath, 'package.json');
+    const requirementsTxt = path.join(searchPath, 'requirements.txt');
+    const setupPy = path.join(searchPath, 'setup.py');
+    const pyprojectToml = path.join(searchPath, 'pyproject.toml');
+
+    if (fs.existsSync(pkgPath)) {
+      const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+      const scripts = pkg.scripts || {};
+      if (scripts.test) return { runner: 'npm', command: 'npm test -- --watchAll=false --passWithNoTests 2>&1', type: 'node', cwd: searchPath };
+      
+      const deps = { ...pkg.dependencies, ...pkg.devDependencies };
+      if (deps['jest']) return { runner: 'jest', command: 'npx jest --watchAll=false 2>&1', type: 'node', cwd: searchPath };
+      if (deps['mocha']) return { runner: 'mocha', command: 'npx mocha 2>&1', type: 'node', cwd: searchPath };
+      if (deps['vitest']) return { runner: 'vitest', command: 'npx vitest run 2>&1', type: 'node', cwd: searchPath };
+    }
+
+    if (fs.existsSync(requirementsTxt) || fs.existsSync(setupPy) || fs.existsSync(pyprojectToml)) {
+      return { runner: 'pytest', command: 'python -m pytest --tb=short 2>&1', type: 'python', cwd: searchPath };
+    }
   }
 
-  if (fs.existsSync(requirementsTxt) || fs.existsSync(setupPy) || fs.existsSync(pyprojectToml)) {
-    return { runner: 'pytest', command: 'python -m pytest --tb=short 2>&1', type: 'python' };
-  }
-
-  return { runner: 'unknown', command: null, type: 'unknown' };
+  return { runner: 'unknown', command: null, type: 'unknown', cwd: repoPath };
 }
 
 function parseNodeTestOutput(output) {
@@ -137,7 +143,7 @@ function parsePythonTestOutput(output) {
 }
 
 async function runTests(repoPath, onProgress = () => {}) {
-  const { runner, command, type } = detectTestRunner(repoPath);
+  const { runner, command, type, cwd } = detectTestRunner(repoPath);
 
   if (!command) {
     return {
@@ -150,11 +156,11 @@ async function runTests(repoPath, onProgress = () => {}) {
 
   try {
     // Install dependencies first if node project
-    if (type === 'node' && fs.existsSync(path.join(repoPath, 'package.json'))) {
+    if (type === 'node' && fs.existsSync(path.join(cwd, 'package.json'))) {
       onProgress('Installing dependencies (npm install)... this may take a minute');
       try {
         execSync('npm install --prefer-offline --no-audit --no-fund --loglevel=error 2>&1', {
-          cwd: repoPath,
+          cwd: cwd,
           timeout: 300000, // 5 minute limit for install
           stdio: 'pipe'
         });
@@ -164,9 +170,9 @@ async function runTests(repoPath, onProgress = () => {}) {
       }
     }
 
-    onProgress(`Executing test runner: ${runner}`);
+    onProgress(`Executing test runner: ${runner} in ${path.basename(cwd)}`);
     const result = spawnSync(command, {
-      cwd: repoPath,
+      cwd: cwd,
       shell: true,
       timeout: 180000,
       encoding: 'utf8'
@@ -177,7 +183,16 @@ async function runTests(repoPath, onProgress = () => {}) {
 
     let failures = [];
     if (!passed) {
-      if (type === 'node') {
+      // Check for "no test specified" (Common npm init default)
+      if (output.includes('Error: no test specified') || output.includes('no test specified')) {
+         failures.push({
+           file: 'package.json',
+           line: 0,
+           message: 'No test script configured (Error: no test specified)',
+           bugType: 'CONFIGURATION',
+           rawOutput: output
+         });
+      } else if (type === 'node') {
         failures = parseNodeTestOutput(output);
       } else if (type === 'python') {
         failures = parsePythonTestOutput(output);
