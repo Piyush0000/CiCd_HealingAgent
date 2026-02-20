@@ -87,7 +87,7 @@ function App() {
     setError(null)
     setCurrentIteration(null)
 
-    addEvent({ type: 'START', message: 'Initializing CI/CD Healing Agent...', ts: new Date().toISOString() })
+    addEvent({ type: 'START', message: 'Initializing Reparo...', ts: new Date().toISOString() })
 
     try {
       // 1. Start the run via POST

@@ -1,0 +1,40 @@
+{
+  "runId": "RUN-126704",
+  "branchName": "BOTZILLA_ANSH_GUPTA_AI_Fix",
+  "repoUrl": "https://github.com/Piyush0000/demo_test_case",
+  "finalStatus": "PASSED",
+  "totalFailures": 1,
+  "totalFixes": 1,
+  "iterations": 2,
+  "maxIterations": 5,
+  "timeTaken": "17s",
+  "score": 110,
+  "scoreBreakdown": {
+    "base": 100,
+    "timeBonus": 10,
+    "commitPenalty": 0
+  },
+  "history": [
+    {
+      "iteration": 1,
+      "status": "FAILED",
+      "timestamp": "2026-02-20T00:41:57.407Z"
+    },
+    {
+      "iteration": 2,
+      "status": "PASSED",
+      "timestamp": "2026-02-20T00:42:06.703Z"
+    }
+  ],
+  "fixes": [
+    {
+      "file": "test.js",
+      "bugType": "LOGIC",
+      "line": 0,
+      "message": "Total calculation is incorrect",
+      "commitMessage": "[AI-AGENT] Fix: LOGIC in test.js line N/A",
+      "status": "Fixed",
+      "action": "Fixed the calculateTotal function to add the price and tax instead of subtracting."
+    }
+  ]
+}

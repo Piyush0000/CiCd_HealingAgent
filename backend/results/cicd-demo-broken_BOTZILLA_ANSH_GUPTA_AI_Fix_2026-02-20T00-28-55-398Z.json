@@ -1,0 +1,40 @@
+{
+  "runId": "RUN-335396",
+  "branchName": "BOTZILLA_ANSH_GUPTA_AI_Fix",
+  "repoUrl": "https://github.com/Piyush0000/cicd-demo-broken",
+  "finalStatus": "PASSED",
+  "totalFailures": 1,
+  "totalFixes": 1,
+  "iterations": 2,
+  "maxIterations": 5,
+  "timeTaken": "17s",
+  "score": 110,
+  "scoreBreakdown": {
+    "base": 100,
+    "timeBonus": 10,
+    "commitPenalty": 0
+  },
+  "history": [
+    {
+      "iteration": 1,
+      "status": "FAILED",
+      "timestamp": "2026-02-20T00:28:45.215Z"
+    },
+    {
+      "iteration": 2,
+      "status": "PASSED",
+      "timestamp": "2026-02-20T00:28:55.395Z"
+    }
+  ],
+  "fixes": [
+    {
+      "file": "test.js",
+      "bugType": "LOGIC",
+      "line": 0,
+      "message": "Total calculation is incorrect",
+      "commitMessage": "[AI-AGENT] Fix: LOGIC in test.js line N/A",
+      "status": "Fixed",
+      "action": "Fixed the total calculation to add price and tax instead of subtracting."
+    }
+  ]
+}

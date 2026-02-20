@@ -84,8 +84,12 @@ async function runOrchestrator({ repoUrl, teamName, leaderName }, emitEvent) {
     if (fixResults.some(f => f.status === 'Fixed')) {
       const commitMsg = `[AI-AGENT] Fix iteration ${iteration}: ${fixResults.filter(f => f.status === 'Fixed').length} issue(s) resolved`;
       emitEvent({ type: 'STEP', message: `Committing: ${commitMsg}` });
-      await repositoryAgent.commitAndPush(repoPath, branchName, commitMsg);
-      emitEvent({ type: 'STEP', message: `Pushed to branch: ${branchName}` });
+      try {
+        await repositoryAgent.commitAndPush(repoPath, branchName, commitMsg);
+        emitEvent({ type: 'STEP', message: `Pushed to branch: ${branchName}` });
+      } catch (err) {
+        emitEvent({ type: 'STEP', message: `⚠️ Push failed: ${err.message}. (Fix verified locally)` });
+      }
     }
 
     ciMonitor.advance();

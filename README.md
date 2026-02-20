@@ -1,4 +1,4 @@
-# 🦅 CI/CD Healing Agent (Code Falcons)
+# 🦅 Reparo (Code Falcons)
 
 > **Autonomous DevOps Agent for the RIFT 2026 Hackathon**  
 > _Detects, Analyzes, and Fixes Code Failures Automously using Multi-Agent AI Architecture._

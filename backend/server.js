@@ -165,7 +165,7 @@ io.on('connection', (socket) => {
 
 const PORT = process.env.PORT || 4000;
 server.listen(PORT, () => {
-  console.log(`\n🚀 CI/CD Healing Agent Backend running on port ${PORT}`);
+  console.log(`\n🚀 Reparo Backend running on port ${PORT}`);
   console.log(`📡 WebSocket server ready`);
   console.log(`🔗 Health check: http://localhost:${PORT}/health\n`);
 });

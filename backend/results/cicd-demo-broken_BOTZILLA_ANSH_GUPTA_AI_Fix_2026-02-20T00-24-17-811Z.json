@@ -1,0 +1,40 @@
+{
+  "runId": "RUN-057809",
+  "branchName": "BOTZILLA_ANSH_GUPTA_AI_Fix",
+  "repoUrl": "https://github.com/Piyush0000/cicd-demo-broken.git",
+  "finalStatus": "PASSED",
+  "totalFailures": 1,
+  "totalFixes": 1,
+  "iterations": 2,
+  "maxIterations": 5,
+  "timeTaken": "24s",
+  "score": 110,
+  "scoreBreakdown": {
+    "base": 100,
+    "timeBonus": 10,
+    "commitPenalty": 0
+  },
+  "history": [
+    {
+      "iteration": 1,
+      "status": "FAILED",
+      "timestamp": "2026-02-20T00:24:01.937Z"
+    },
+    {
+      "iteration": 2,
+      "status": "PASSED",
+      "timestamp": "2026-02-20T00:24:17.808Z"
+    }
+  ],
+  "fixes": [
+    {
+      "file": "test.js",
+      "bugType": "LOGIC",
+      "line": 0,
+      "message": "Total calculation is incorrect 80 !== 120 Expected: 120 Actual: 80",
+      "commitMessage": "[AI-AGENT] Fix: LOGIC in test.js line N/A",
+      "status": "Fixed",
+      "action": "The function `calculateTotal` was subtracting the tax from the price instead of adding it. I changed the `-` operator to a `+` operator."
+    }
+  ]
+}

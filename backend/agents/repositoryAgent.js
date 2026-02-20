@@ -50,10 +50,22 @@ async function commitAndPush(repoPath, branchName, commitMessage) {
 
   await git.commit(commitMessage);
 
-  try {
-    await git.push('origin', branchName, ['--set-upstream']);
-  } catch (e) {
-    console.warn('Push warning:', e.message);
+  // Retry logic for pushing (handles network blips)
+  let pushSuccess = false;
+  for (let i = 0; i < 3; i++) {
+    try {
+      console.log(`[GIT] Pushing to ${branchName} (Attempt ${i + 1}/3)...`);
+      await git.push('origin', branchName, ['--set-upstream']);
+      pushSuccess = true;
+      break;
+    } catch (e) {
+      console.warn(`[GIT] Push failed (Attempt ${i + 1}):`, e.message);
+      await new Promise(r => setTimeout(r, 2000)); // Wait 2s
+    }
+  }
+
+  if (!pushSuccess) {
+    throw new Error('Failed to push to remote after 3 attempts');
   }
 }
 

@@ -12,7 +12,7 @@ function Header() {
             <path d="M16 8l-2 3" />
             <path d="M12 16l-2-2" />
           </svg>
-          CI/CD Healing Agent
+          Reparo
         </div>
 
         <div className="status-badge" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
