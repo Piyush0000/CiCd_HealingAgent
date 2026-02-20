@@ -130,7 +130,7 @@ Our agent can automatically detect and fix:
     *   Analyze logs (AI Parse 🧠).
     *   Apply fix (AI Patch 🔧).
     *   Run tests again (Pass ✅).
-    *   Push to GitHub (`CODE_FALCONS_DANI_DANIELS_AI_Fix`).
+    *   Push to GitHub (`BOTZILLA_ANSH_GUPTA_AI_Fix`).
 
 ---
 
